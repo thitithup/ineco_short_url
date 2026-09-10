@@ -21,14 +21,16 @@ from src.mcp_server import mcp
 
 # Streamable HTTP MCP Sub-application
 _sec_settings = TransportSecuritySettings(enable_dns_rebinding_protection=False)
-mcp_http_app = mcp.streamable_http_app(streamable_http_path="/", transport_security=_sec_settings)
+mcp.settings.streamable_http_path = "/"
+mcp.settings.transport_security = _sec_settings
+mcp_http_app = mcp.streamable_http_app()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup: ensure database tables are created and MCP session manager runs."""
     Base.metadata.create_all(bind=engine)
-    sm = getattr(mcp._lowlevel_server, "_session_manager", None)
+    sm = getattr(mcp, "_session_manager", None)
     if sm is not None:
         sm._has_started = False
     async with mcp_http_app.router.lifespan_context(mcp_http_app):

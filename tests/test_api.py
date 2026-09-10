@@ -199,7 +199,11 @@ def test_mcp_web_route_initialize(client):
             "clientInfo": {"name": "test-ai-client", "version": "1.0"},
         },
     }
-    res = client.post("/mcp/", json=init_payload)
+    res = client.post(
+        "/mcp/",
+        json=init_payload,
+        headers={"Accept": "application/json, text/event-stream"},
+    )
     assert res.status_code == 200
     # Streamable HTTP MCP returns event-stream with JSON-RPC payload
     assert "ineco-short-url-mcp" in res.text
