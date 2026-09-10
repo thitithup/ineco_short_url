@@ -16,13 +16,23 @@ from src.schemas import (
     StandardErrorResponse,
 )
 from src import crud
+from mcp.server.transport_security import TransportSecuritySettings
+from src.mcp_server import mcp
+
+# Streamable HTTP MCP Sub-application
+_sec_settings = TransportSecuritySettings(enable_dns_rebinding_protection=False)
+mcp_http_app = mcp.streamable_http_app(streamable_http_path="/", transport_security=_sec_settings)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application startup: ensure database tables are created."""
+    """Application startup: ensure database tables are created and MCP session manager runs."""
     Base.metadata.create_all(bind=engine)
-    yield
+    sm = getattr(mcp._lowlevel_server, "_session_manager", None)
+    if sm is not None:
+        sm._has_started = False
+    async with mcp_http_app.router.lifespan_context(mcp_http_app):
+        yield
 
 
 app = FastAPI(
@@ -99,6 +109,19 @@ def shorten_url(
         expires_at=db_item.expires_at,
         created_at=db_item.created_at,
     )
+
+
+# ----------------------------------------------------
+# Model Context Protocol (MCP) Streamable HTTP Route
+# ----------------------------------------------------
+@app.get("/mcp", include_in_schema=False)
+@app.post("/mcp", include_in_schema=False)
+def redirect_to_mcp_trailing_slash():
+    """Redirect /mcp to /mcp/ sub-application."""
+    return RedirectResponse(url="/mcp/", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+app.mount("/mcp", mcp_http_app)
 
 
 @app.get(

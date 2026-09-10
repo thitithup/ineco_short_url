@@ -120,6 +120,64 @@
     "If generated code already exists, regenerate with max 5 attempts.",
     "If URL is expired, redirect must return HTTP 410 Gone with standard error response.",
     "Click count must be incremented atomically upon successful redirection.",
-    "Creation and analytics endpoints must require valid X-API-Key header."
-  ]
+    "Creation and analytics endpoints must require valid X-API-Key header.",
+    "MCP tools must communicate via Standard I/O (stdio) transport using FastMCP.",
+    "MCP resolve_url tool must not increment click count or write to click_logs."
+  ],
+  "mcp_specification": {
+    "server_name": "ineco-short-url-mcp",
+    "transport": "stdio",
+    "tools": [
+      {
+        "name": "shorten_url",
+        "description": "Shorten a target long URL and optionally specify expiration time in hours",
+        "parameters": {
+          "url": { "type": "string", "description": "The original target URL to shorten", "required": true },
+          "expires_in_hours": { "type": "integer", "description": "Optional lifetime in hours", "required": false }
+        },
+        "returns": {
+          "short_code": "string",
+          "short_url": "string",
+          "original_url": "string",
+          "expires_at": "string or null"
+        }
+      },
+      {
+        "name": "get_url_analytics",
+        "description": "Retrieve click counts, creation date, expiration status, and recent click logs for a short URL",
+        "parameters": {
+          "short_code": { "type": "string", "description": "6-character short code", "required": true }
+        },
+        "returns": {
+          "short_code": "string",
+          "original_url": "string",
+          "total_clicks": "integer",
+          "is_expired": "boolean",
+          "expires_at": "string or null",
+          "recent_clicks": "array"
+        }
+      },
+      {
+        "name": "resolve_url",
+        "description": "Safely inspect the destination of a short code without incrementing click counts or triggering redirection",
+        "parameters": {
+          "short_code": { "type": "string", "description": "6-character short code", "required": true }
+        },
+        "returns": {
+          "short_code": "string",
+          "original_url": "string",
+          "is_expired": "boolean",
+          "expires_at": "string or null"
+        }
+      }
+    ],
+    "resources": [
+      {
+        "uri": "short://recent-urls",
+        "name": "Recent Shortened URLs",
+        "description": "Returns the latest 10 shortened URLs created in the database with click counters",
+        "mimeType": "application/json"
+      }
+    ]
+  }
 }

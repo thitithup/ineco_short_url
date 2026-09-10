@@ -1,17 +1,18 @@
 {
   "project_name": "short-url-generator",
   "mode": "FULL_EXTENSION",
-  "feature": "QR Code Generator Endpoint",
+  "feature": "Model Context Protocol (MCP) Server Integration & Web API Route",
   "current_phase": "Phase 6: Delivery & Verification",
   "status": "COMPLETED",
-  "completed_tasks": [
-    "TASK-EXT-001 (Add qrcode dependency)",
-    "TASK-EXT-002 (Implement generate_qr_code_png in crud.py)",
-    "TASK-EXT-003 (Add GET /api/v1/qrcode/{short_code} in main.py)",
-    "TASK-EXT-004 (Add 3 QR Code tests to test_api.py)",
-    "TASK-EXT-005 (Initialize .venv and run pytest 9/9 passed)",
-    "TASK-EXT-006 (Update SYSTEM_MANUAL.md and USER_MANUAL.md)"
+  "atomic_tasks": [
+    { "id": "TASK-MCP-001", "name": "Install mcp dependency into .venv and requirements.txt", "status": "COMPLETED" },
+    { "id": "TASK-MCP-002", "name": "Implement src/mcp_server.py with FastMCP, tools and resource", "status": "COMPLETED" },
+    { "id": "TASK-MCP-003", "name": "Implement tests/test_mcp_server.py test suite", "status": "COMPLETED" },
+    { "id": "TASK-MCP-004", "name": "Run dynamic pytest verification and code audit", "status": "COMPLETED" },
+    { "id": "TASK-MCP-005", "name": "Create mcp_config.example.json and devops configuration", "status": "COMPLETED" },
+    { "id": "TASK-MCP-006", "name": "Update docs/SYSTEM_MANUAL.md and README.md", "status": "COMPLETED" },
+    { "id": "TASK-MCP-007", "name": "Mount Streamable HTTP MCP route /mcp on FastAPI Web API", "status": "COMPLETED" }
   ],
-  "test_results": "9 passed in 4.19s",
-  "updated_at": "2026-09-10T11:05:50Z"
+  "test_results": "20 passed in 0.60s (100% pass)",
+  "updated_at": "2026-09-10T12:42:00Z"
 }

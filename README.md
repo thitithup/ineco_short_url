@@ -111,3 +111,43 @@ curl -i http://localhost:8000/aB3d9Z
 curl -X GET http://localhost:8000/api/v1/analytics/aB3d9Z \
   -H "X-API-Key: ineco-secret-key-12345"
 ```
+
+---
+
+## 🤖 การเชื่อมต่อใช้งานร่วมกับ AI Assistant (MCP Server)
+
+ระบบรองรับ **Model Context Protocol (MCP)** สำหรับให้ AI Agents (Google Antigravity IDE, Claude Desktop, Cursor) เรียกใช้งานฟังก์ชันย่อลิงก์และดูสถิติได้ทันทีทั้งแบบ Local Process (`stdio`) และ Web API Endpoint (`http://localhost:8000/mcp`)
+
+### การตั้งค่า Client
+
+#### แบบที่ 1: Local CLI (`stdio`)
+```json
+{
+  "mcpServers": {
+    "ineco-short-url": {
+      "command": "/path/to/short/.venv/bin/python3",
+      "args": ["-m", "src.mcp_server"],
+      "cwd": "/path/to/short"
+    }
+  }
+}
+```
+
+#### แบบที่ 2: Web API Route (`Streamable HTTP`)
+เมื่อรัน FastAPI Web API (`uvicorn src.main:app --port 8000`) สามารถเชื่อมต่อผ่าน Remote URL:
+```json
+{
+  "mcpServers": {
+    "ineco-short-url-remote": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
+
+### เครื่องมือที่ AI สามารถเรียกใช้ได้ (MCP Tools):
+- 🔗 `shorten_url(url, expires_in_hours)`: สร้างลิงก์สั้นใหม่
+- 🔍 `resolve_url(short_code)`: ตรวจสอบ URL ปลายทางโดยไม่เพิ่มยอดคลิก (Safe Inspection)
+- 📊 `get_url_analytics(short_code)`: ดึงข้อมูลสถิติและการคลิก
+- 📋 `short://recent-urls` (Resource): อ่านรายการ 10 ลิงก์ล่าสุด
+

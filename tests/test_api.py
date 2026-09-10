@@ -41,7 +41,8 @@ def setup_database():
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 def test_health_check(client):
@@ -177,4 +178,30 @@ def test_get_qr_code_expired(client):
     res = client.get("/api/v1/qrcode/qrexp1")
     assert res.status_code == 410
     assert res.json()["error_code"] == "URL_EXPIRED"
+
+
+def test_mcp_web_route_redirect(client):
+    """Ensure GET /mcp redirects to /mcp/ sub-application."""
+    res = client.get("/mcp", follow_redirects=False)
+    assert res.status_code == 307
+    assert res.headers["location"] == "/mcp/"
+
+
+def test_mcp_web_route_initialize(client):
+    """Ensure POST /mcp/ responds to JSON-RPC MCP initialization."""
+    init_payload = {
+        "jsonrpc": "2.0",
+        "id": 100,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "test-ai-client", "version": "1.0"},
+        },
+    }
+    res = client.post("/mcp/", json=init_payload)
+    assert res.status_code == 200
+    # Streamable HTTP MCP returns event-stream with JSON-RPC payload
+    assert "ineco-short-url-mcp" in res.text
+    assert "tools" in res.text
 

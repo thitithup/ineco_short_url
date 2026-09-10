@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "ineco-short-url-local": {
+      "command": "/Users/tititab/Documents/Codes/Software House/short/.venv/bin/python3",
+      "args": [
+        "-m",
+        "src.mcp_server"
+      ],
+      "cwd": "/Users/tititab/Documents/Codes/Software House/short",
+      "env": {
+        "DATABASE_URL": "sqlite:///./short_url.db",
+        "BASE_URL": "http://localhost:8000"
+      }
+    },
+    "ineco-short-url-remote": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}

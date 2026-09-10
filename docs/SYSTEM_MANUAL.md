@@ -185,3 +185,57 @@ pytest tests/ -v
 - **Job 2: Container Image Build Verification (`docker-build`):**
   - ติดตั้ง Docker Buildx (`docker/setup-buildx-action@v3`)
   - ตรวจสอบว่า `Dockerfile` สามารถประกอบร่าง Image ได้สมบูรณ์โดยไม่มี Error ก่อนที่จะอนุญาตให้นำโค้ดขึ้น Production Server
+
+---
+
+## 8. ระบบ Model Context Protocol (MCP) Server Specification
+
+ระบบได้รับการติดตั้ง **MCP Server** สำหรับรองรับการสื่อสารแบบ Agentic AI โดยตรง ทำให้ AI Assistants (เช่น Google Antigravity IDE, Claude Desktop, Cursor) สามารถเข้าถึงเครื่องมือจัดการ URL ได้อย่างปลอดภัย
+
+### 8.1 สถาปัตยกรรมการสื่อสารแบบคู่ขนาน (Dual-Mode Transport Architecture)
+ระบบรองรับการเชื่อมต่อ MCP 2 รูปแบบพร้อมกัน:
+1. **Local CLI / Stdio Mode:** สื่อสารผ่าน Standard Input/Output (`stdio`) ด้วยคำสั่ง `python3 -m src.mcp_server` สำหรับ AI Client ที่รันในเครื่องเดียวกัน
+2. **Web API Route Mode (Streamable HTTP):** เชื่อมต่อโดยตรงผ่าน FastAPI Web Server:
+   - **URL Route:** `http://localhost:8000/mcp` (หรือ `http://localhost:8000/mcp/`)
+   - **HTTP Methods:** `POST` (สำหรับส่งคำสั่ง JSON-RPC เช่น `initialize`, `tools/list`, `tools/call`) และ `GET` (สำหรับรับ Streaming Responses)
+   - **Lifespan Integration:** ผูก Session Lifecycle เข้ากับ FastAPI Startup/Shutdown โดยอัตโนมัติ
+
+### 8.2 รายการ MCP Tools ที่ให้บริการ
+
+| ชื่อ Tool | อาร์กิวเมนต์ (Arguments) | คำอธิบาย | ข้อมูลตอบกลับ (Returns) |
+|---|---|---|---|
+| `shorten_url` | `url: str`, `expires_in_hours: Optional[int]` | ย่อลิงก์ปลายทาง พร้อมกำหนดอายุได้ | `short_code`, `short_url`, `original_url`, `expires_at` |
+| `resolve_url` | `short_code: str` | ตรวจสอบ URL ปลายทางโดย**ไม่นับยอดคลิก** (Safe Inspection) | `short_code`, `original_url`, `is_expired`, `expires_at` |
+| `get_url_analytics` | `short_code: str` | ดึงสถิติคลิก วันที่สร้าง และประวัติการเข้าชม 10 ครั้งล่าสุด | `total_clicks`, `is_expired`, `recent_clicks` list |
+
+### 8.3 รายการ MCP Resources ที่ให้บริการ
+- **URI:** `short://recent-urls`
+- **MIME Type:** `application/json`
+- **คำอธิบาย:** ดึงรายการ 10 ลิงก์ล่าสุดที่ถูกสร้างในระบบพร้อมสถิติจำนวนการคลิก
+
+### 8.4 การตั้งค่า MCP Client (ตัวอย่างสำหรับ Antigravity / Claude Desktop)
+
+#### ตัวเลือกที่ 1: เชื่อมต่อผ่าน Local CLI (stdio)
+```json
+{
+  "mcpServers": {
+    "ineco-short-url": {
+      "command": "/path/to/short/.venv/bin/python3",
+      "args": ["-m", "src.mcp_server"],
+      "cwd": "/path/to/short"
+    }
+  }
+}
+```
+
+#### ตัวเลือกที่ 2: เชื่อมต่อผ่าน Web API Remote URL (Streamable HTTP)
+```json
+{
+  "mcpServers": {
+    "ineco-short-url-remote": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
+
