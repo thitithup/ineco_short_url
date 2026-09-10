@@ -123,6 +123,19 @@
 
 ---
 
+### 3.4 ดาวน์โหลดภาพ QR Code (`GET /api/v1/qrcode/{short_code}`)
+- **Public Endpoint:** ไม่ต้องใช้ API Key
+- **Query Parameters:**
+  - `box_size` (ทางเลือก, ค่าเริ่มต้น: 10, ช่วงค่า: 2 - 20): ควบคุมขนาดพิกเซลของ QR Code
+- **Response Success (200 OK):**
+  - **Content-Type:** `image/png`
+  - ข้อมูลรูปภาพไบนารี PNG ของ QR Code ที่บรรจุ Short URL เต็มรูปแบบ สามารถนำไปแสดงผลบนหน้าเว็บหรือสแกนด้วยสมาร์ทโฟนได้ทันที
+- **Error Responses:**
+  - `404 Not Found`: ไม่พบรหัสย่อนี้ในระบบ
+  - `410 Gone`: ลิงก์ย่อนี้หมดอายุการใช้งานแล้ว
+
+---
+
 ## 4. มาตรฐานความปลอดภัย (Security & Authorization)
 
 1. **API Key Guard:** ใช้ Dependency Injection ตรวจสอบค่า `X-API-Key` เทียบกับ Environment Variable ป้องกัน Brute-Force เบื้องต้น

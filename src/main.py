@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 
@@ -200,3 +200,53 @@ def get_analytics(
         expires_at=url_item.expires_at,
         recent_clicks=recent_clicks,
     )
+
+
+@app.get(
+    "/api/v1/qrcode/{short_code}",
+    tags=["QR Code"],
+    responses={
+        200: {
+            "content": {"image/png": {}},
+            "description": "High-resolution QR code image in PNG format",
+        },
+        404: {"model": StandardErrorResponse},
+        410: {"model": StandardErrorResponse},
+    },
+)
+def get_qr_code(
+    short_code: str,
+    box_size: int = 10,
+    db: Session = Depends(get_db),
+):
+    """
+    Generate and return a high-resolution QR Code image (PNG) for the short URL.
+    Can be scanned directly by smartphones and QR readers.
+    """
+    url_item = crud.get_url_by_code(db, short_code)
+    if not url_item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "status": "error",
+                "error_code": "URL_NOT_FOUND",
+                "message": f"Short URL code '{short_code}' was not found.",
+            },
+        )
+
+    if crud.is_url_expired(url_item):
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail={
+                "status": "error",
+                "error_code": "URL_EXPIRED",
+                "message": f"The short URL '{short_code}' has expired on {url_item.expires_at}.",
+            },
+        )
+
+    short_url = f"{settings.BASE_URL.rstrip('/')}/{url_item.short_code}"
+    clamped_size = max(2, min(box_size, 20))
+    png_bytes = crud.generate_qr_code_png(short_url, box_size=clamped_size)
+
+    return Response(content=png_bytes, media_type="image/png")
+

@@ -135,3 +135,46 @@ def test_redirect_not_found(client):
     res = client.get("/nonexistent", follow_redirects=False)
     assert res.status_code == 404
     assert res.json()["error_code"] == "URL_NOT_FOUND"
+
+
+def test_get_qr_code_success(client):
+    # 1. Create short URL
+    create_res = client.post(
+        "/api/v1/shorten",
+        json={"original_url": "https://example.com/target-qr"},
+        headers={"X-API-Key": settings.API_KEY},
+    )
+    code = create_res.json()["short_code"]
+
+    # 2. Get QR code
+    qr_res = client.get(f"/api/v1/qrcode/{code}")
+    assert qr_res.status_code == 200
+    assert qr_res.headers["content-type"] == "image/png"
+    # Verify PNG magic bytes
+    assert qr_res.content.startswith(b"\x89PNG\r\n\x1a\n")
+    assert len(qr_res.content) > 100
+
+
+def test_get_qr_code_not_found(client):
+    res = client.get("/api/v1/qrcode/notfound")
+    assert res.status_code == 404
+    assert res.json()["error_code"] == "URL_NOT_FOUND"
+
+
+def test_get_qr_code_expired(client):
+    db = TestingSessionLocal()
+    expired_item = URLItem(
+        original_url="https://expired-qr.com",
+        short_code="qrexp1",
+        click_count=0,
+        expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
+        created_at=datetime.now(timezone.utc) - timedelta(hours=2),
+    )
+    db.add(expired_item)
+    db.commit()
+    db.close()
+
+    res = client.get("/api/v1/qrcode/qrexp1")
+    assert res.status_code == 410
+    assert res.json()["error_code"] == "URL_EXPIRED"
+
