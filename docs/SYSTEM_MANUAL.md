@@ -157,3 +157,18 @@ pytest tests/ -v
 ```
 - Swagger UI Documentation: `http://localhost:8000/docs`
 - Healthcheck Endpoint: `http://localhost:8000/health`
+
+---
+
+## 7. ระบบ CI/CD และการควบคุมคุณภาพอัตโนมัติ (Automated Quality Gates)
+
+ระบบได้รับการติดตั้ง Pipeline ตรวจสอบคุณภาพโค้ดอัตโนมัติผ่าน GitHub Actions:
+- **Workflow File:** `.github/workflows/ci.yml`
+- **Triggers:** ทำงานทันทีเมื่อมี `push` หรือ `pull_request` เข้าสู่ Branch `main` และ `master`
+- **Job 1: Test Runner (`test`):**
+  - รันบนสภาพแวดล้อม `ubuntu-latest` ด้วย Python 3.12
+  - ติดตั้ง Dependencies ผ่านระบบ Pip Cache
+  - ดำเนินการรัน Pytest 6 เคสทดสอบ เพื่อยืนยันว่าการทำงานของ Authentication, Shorten, Expiration, และ Redirect ไม่พัง
+- **Job 2: Container Image Build Verification (`docker-build`):**
+  - ติดตั้ง Docker Buildx (`docker/setup-buildx-action@v3`)
+  - ตรวจสอบว่า `Dockerfile` สามารถประกอบร่าง Image ได้สมบูรณ์โดยไม่มี Error ก่อนที่จะอนุญาตให้นำโค้ดขึ้น Production Server

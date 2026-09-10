@@ -1,5 +1,7 @@
 # Short URL Generator API 🚀
 
+[![CI/CD Pipeline](https://github.com/thitithup/ineco_short_url/actions/workflows/ci.yml/badge.svg)](https://github.com/thitithup/ineco_short_url/actions/workflows/ci.yml)
+
 ระบบบริการย่อลิงก์ (URL Shortener) และวิเคราะห์สถิติการคลิก (Click Analytics) ประสิทธิภาพสูง พัฒนาโดย **Ineco Software House** ด้วย **Python FastAPI + SQLAlchemy + SQLite**
 
 ---
@@ -51,6 +53,15 @@ uvicorn src.main:app --reload --port 8000
 ```bash
 pytest tests/ -v
 ```
+
+---
+
+## 🔄 ระบบ CI/CD อัตโนมัติ (Continuous Integration)
+
+โปรเจกต์นี้ติดตั้งระบบ CI/CD Pipeline อัตโนมัติผ่าน **GitHub Actions** (`.github/workflows/ci.yml`) ที่จะทำงานทุกครั้งที่มีการ `push` หรือเปิด `Pull Request` เข้าสู่ `main`:
+1. **Automated Unit & Integration Tests:** ทดสอบทุก Endpoint ผ่าน Python 3.12 ด้วย `pytest`
+2. **Container Build Verification:** ทดสอบประกอบร่าง Docker Image จริงเพื่อรับประกันว่าพร้อมส่งมอบงานเสมอ
+3. **Status Badge:** แสดงผลลัพธ์ผ่าน/ไม่ผ่านสดๆ ที่หัวข้อ README
 
 ---
 
